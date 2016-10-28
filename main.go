@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fvbock/endless"
 	"github.com/pressly/chi"
 	"github.com/pressly/chi/middleware"
 )
@@ -63,7 +64,7 @@ func main() {
 		timestamp := time.Now().UTC()
 		link := r.FormValue("link")
 		if link == "" {
-			http.Redirect(w, r, "/", http.StatusSeeOther)
+			fmt.Fprintf(w, "Empty link :(")
 			return
 		}
 		fmt.Printf("-> %s\t%s\t%s\n", timestamp, r.RemoteAddr, link)
@@ -71,5 +72,5 @@ func main() {
 	})
 
 	fmt.Fprintf(os.Stderr, "listening on %s\n", bind)
-	http.ListenAndServe(bind, r)
+	endless.ListenAndServe(bind, r)
 }
