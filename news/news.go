@@ -1,6 +1,9 @@
 package news
 
-import "communal/news/store"
+import (
+	"communal/news/store"
+	"errors"
+)
 
 type News interface {
 	AddFeed(url string) error
@@ -8,5 +11,12 @@ type News interface {
 	Top(n int) ([]*store.Item, error)
 }
 
+func New(id string) (*news, error) {
+	return nil, errors.New("not implemented")
+}
+
 type news struct {
+	store.Store
+
+	ID store.NewsID
 }

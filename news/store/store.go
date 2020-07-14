@@ -2,6 +2,12 @@ package store
 
 import "time"
 
+type NewsID int
+type News struct {
+	NewsID      NewsID
+	OwnerUserID UserID
+}
+
 type UserID int
 type User struct {
 	UserID UserID

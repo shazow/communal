@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/OpenPeeDeeP/xdg"
 	flags "github.com/jessevdk/go-flags"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -24,6 +25,9 @@ var Version string = "dev"
 
 // Options contains the flag options
 type Options struct {
+	DataDir string `long:"datadir" description:"Path for storing the persistent database."`
+	Bind    string `long:"bind" description:"Address and port to listen on." default:"0.0.0.0:8080"`
+
 	Pprof   string `long:"pprof" description:"Bind pprof http server for profiling. (Example: localhost:6060)"`
 	Verbose []bool `short:"v" long:"verbose" description:"Show verbose logging."`
 	Version bool   `long:"version" description:"Print version and exit."`
@@ -89,6 +93,7 @@ func main() {
 }
 
 func run(ctx context.Context, options Options) error {
+
 	bind := ":8080"
 	if len(os.Args) > 1 {
 		bind = os.Args[1]
@@ -117,4 +122,15 @@ func run(ctx context.Context, options Options) error {
 
 	fmt.Fprintf(os.Stderr, "listening on %s\n", bind)
 	return endless.ListenAndServe(bind, r)
+}
+
+// findDataDir returns a valid data dir, will create it if it doesn't
+// exist.
+func findDataDir(overridePath string) (string, error) {
+	path := overridePath
+	if path == "" {
+		path = xdg.New("communal", "communal").DataHome()
+	}
+	err := os.MkdirAll(path, 0700)
+	return path, err
 }
