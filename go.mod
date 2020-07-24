@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/DataDog/zstd v1.4.5 // indirect
+	github.com/OpenPeeDeeP/xdg v0.2.0
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/dgraph-io/badger v1.6.1

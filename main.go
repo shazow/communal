@@ -25,12 +25,20 @@ var Version string = "dev"
 
 // Options contains the flag options
 type Options struct {
-	DataDir string `long:"datadir" description:"Path for storing the persistent database."`
-	Bind    string `long:"bind" description:"Address and port to listen on." default:"0.0.0.0:8080"`
-
 	Pprof   string `long:"pprof" description:"Bind pprof http server for profiling. (Example: localhost:6060)"`
 	Verbose []bool `short:"v" long:"verbose" description:"Show verbose logging."`
 	Version bool   `long:"version" description:"Print version and exit."`
+
+	Serve struct {
+		Bind    string `long:"bind" description:"Address and port to listen on." default:"0.0.0.0:8080"`
+		DataDir string `long:"datadir" description:"Path for storing the persistent database."`
+	} `command:"serve" description:"Serve a communal frontend."`
+
+	Discover struct {
+		Args struct {
+			URL string `positional-arg-name:"url" description:"Link to discover"`
+		} `positional-args:"yes"`
+	} `command:"discover" description:"Crawl metadata about a link."`
 }
 
 func exit(code int, format string, args ...interface{}) {
@@ -40,7 +48,8 @@ func exit(code int, format string, args ...interface{}) {
 
 func main() {
 	options := Options{}
-	p, err := flags.NewParser(&options, flags.Default).ParseArgs(os.Args[1:])
+	parser := flags.NewParser(&options, flags.Default)
+	p, err := parser.ParseArgs(os.Args[1:])
 	if err != nil {
 		if p == nil {
 			fmt.Println(err)
@@ -62,6 +71,26 @@ func main() {
 		logger = logger.Level(zerolog.DebugLevel)
 	}
 
+	if options.Pprof != "" {
+		go func() {
+			logger.Debug().Str("bind", options.Pprof).Msg("starting pprof server")
+			if err := http.ListenAndServe(options.Pprof, nil); err != nil {
+				logger.Error().Err(err).Msg("failed to serve pprof")
+			}
+		}()
+	}
+
+	var cmd string
+	if parser.Active != nil {
+		cmd = parser.Active.Name
+	}
+	if err := subcommand(cmd, options); err != nil {
+		logger.Error().Err(err).Msgf("failed to run command: %s", cmd)
+		return
+	}
+}
+
+func subcommand(cmd string, options Options) error {
 	// Setup signals
 	ctx, abort := context.WithCancel(context.Background())
 	sigCh := make(chan os.Signal, 1)
@@ -75,24 +104,18 @@ func main() {
 		panic("aborted")
 	}(abort)
 
-	if options.Pprof != "" {
-		go func() {
-			logger.Debug().Str("bind", options.Pprof).Msg("starting pprof server")
-			if err := http.ListenAndServe(options.Pprof, nil); err != nil {
-				logger.Error().Err(err).Msgf("failed to serve pprof")
-			}
-		}()
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := run(ctx, options); err != nil {
-		logger.Error().Err(err)
+	switch cmd {
+	case "serve":
+		return runServe(ctx, options)
 	}
+
+	return fmt.Errorf("unknown command: %s", cmd)
 }
 
-func run(ctx context.Context, options Options) error {
+func runServe(ctx context.Context, options Options) error {
 
 	bind := ":8080"
 	if len(os.Args) > 1 {
