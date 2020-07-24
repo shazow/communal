@@ -1,6 +1,7 @@
 package main
 
 import (
+	"communal/loader/hackernews"
 	"context"
 	"fmt"
 	"net/http"
@@ -108,15 +109,30 @@ func subcommand(cmd string, options Options) error {
 	defer cancel()
 
 	switch cmd {
+	case "discover":
+		return discover(ctx, options)
 	case "serve":
-		return runServe(ctx, options)
+		return serve(ctx, options)
 	}
 
 	return fmt.Errorf("unknown command: %s", cmd)
 }
 
-func runServe(ctx context.Context, options Options) error {
+func discover(ctx context.Context, options Options) error {
+	link := options.Discover.Args.URL
+	logger.Debug().Str("link", link).Msg("discovering")
 
+	hn := hackernews.HackerNews{}
+	res, err := hn.Discover(ctx, link)
+	if err != nil {
+		return err
+	}
+	logger.Info().Msgf("hn result: %v", res)
+	return nil
+}
+
+func serve(ctx context.Context, options Options) error {
+	// FIXME: This is a placeholder, will be replaced with something real later.
 	bind := ":8080"
 	if len(os.Args) > 1 {
 		bind = os.Args[1]

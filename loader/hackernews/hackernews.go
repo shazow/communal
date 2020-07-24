@@ -1,12 +1,14 @@
 package hackernews
 
 import (
-	"communal/loader"
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"time"
 )
+
+const apiSearch = "https://hn.algolia.com/api/v1/search"
 
 func normalizeLink(link string) string {
 	// Funfact: HN Angolia truncates URLs to 60 chars, so searching for a longer URL yields no results
@@ -21,14 +23,15 @@ type HackerNews struct {
 	client http.Client
 }
 
-func (hn *HackerNews) Discover(ctx context.Context, link string) (*loader.Result, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://hn.algolia.com/api/v1/search", nil)
+func (hn *HackerNews) Discover(ctx context.Context, link string) (*hnQueryResult, error) {
+	params := url.Values{}
+	params.Set("query", normalizeLink(link))
+	params.Set("restrictSearchableAttributes", "url")
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiSearch+"?"+params.Encode(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req.Form.Add("query", normalizeLink(link))
-	req.Form.Add("restrictSearchableAttributes", "url")
 	resp, err := hn.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -39,7 +42,7 @@ func (hn *HackerNews) Discover(ctx context.Context, link string) (*loader.Result
 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		return nil, err
 	}
-	return r, nil
+	return &r, nil
 }
 
 type hnHit struct {

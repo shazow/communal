@@ -1,9 +1,26 @@
-BINARY = build/news
+VERSION := $(shell git describe --tags --dirty --always 2> /dev/null || echo "dev")
+LDFLAGS = "-X main.Version=$(VERSION) -w -s"
+SOURCES = $(shell find . -type f -name '*.go')
 
-run:
-	go run *.go
+BINARY = $(notdir $(PWD))
+RUN = ./$(BINARY)
 
-deploy:
-	GOARCH=amd64 GOOS=linux go build -o build/news-linux_amd64
-	rsync -bavz --progress build/news-linux_amd64 ip.shazow.net:projects/news/news-linux_amd64
-	ssh ip.shazow.net fuser -s -k -HUP projects/news/news-linux_amd64~ || echo "binary did not change"
+all: $(BINARY)
+
+$(BINARY): $(SOURCES)
+	go build -ldflags $(LDFLAGS) -o "$@"
+
+build: $(BINARY)
+
+clean:
+	rm $(BINARY)
+
+run: $(BINARY)
+	$(RUN) --help
+
+test:
+	go test -vet "all" -timeout 5s -race ./...
+
+deploy: build
+	rsync -bavz --progress $(BINARY) ip.shazow.net:projects/news/$(BINARY)
+	ssh ip.shazow.net fuser -s -k -HUP projects/news/$(BINARY)~ || echo "binary did not change"
