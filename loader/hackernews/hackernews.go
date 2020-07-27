@@ -20,7 +20,7 @@ func normalizeLink(link string) string {
 }
 
 type Loader struct {
-	client http.Client
+	Client http.Client
 }
 
 func (loader *Loader) Discover(ctx context.Context, link string) (*hnQueryResult, error) {
@@ -32,7 +32,7 @@ func (loader *Loader) Discover(ctx context.Context, link string) (*hnQueryResult
 	if err != nil {
 		return nil, err
 	}
-	resp, err := loader.client.Do(req)
+	resp, err := loader.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}

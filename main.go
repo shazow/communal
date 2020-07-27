@@ -2,6 +2,7 @@ package main
 
 import (
 	"communal/loader/hackernews"
+	"communal/loader/reddit"
 	"context"
 	"fmt"
 	"net/http"
@@ -122,12 +123,30 @@ func discover(ctx context.Context, options Options) error {
 	link := options.Discover.Args.URL
 	logger.Debug().Str("link", link).Msg("discovering")
 
-	hn := hackernews.Loader{}
-	res, err := hn.Discover(ctx, link)
-	if err != nil {
-		return err
+	client := http.Client{
+		Transport: &httpTransport{
+			RoundTripper: http.DefaultTransport,
+			UserAgent:    fmt.Sprintf("communal/%s", Version), // TODO: Unhardcode
+		},
 	}
-	logger.Info().Msgf("hn result: %v", res)
+
+	{
+		hn := hackernews.Loader{client}
+		res, err := hn.Discover(ctx, link)
+		if err != nil {
+			return err
+		}
+		logger.Info().Interface("result", res).Msg("hn")
+	}
+
+	{
+		r := reddit.Loader{client}
+		res, err := r.Discover(ctx, link)
+		if err != nil {
+			return err
+		}
+		logger.Info().Interface("result", res).Msg("reddit")
+	}
 	return nil
 }
 
@@ -172,4 +191,18 @@ func findDataDir(overridePath string) (string, error) {
 	}
 	err := os.MkdirAll(path, 0700)
 	return path, err
+}
+
+// httpTransport is an http.RoundTripper transport wrapper that adds default
+// communal headers and configurations.
+type httpTransport struct {
+	http.RoundTripper
+	UserAgent string
+}
+
+func (transport *httpTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if transport.UserAgent != "" {
+		req.Header.Add("User-Agent", transport.UserAgent)
+	}
+	return transport.RoundTripper.RoundTrip(req)
 }

@@ -1,7 +1,6 @@
 package reddit
 
 import (
-	"communal/loader"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -13,10 +12,10 @@ const apiSearch = "https://www.reddit.com/search.json" // ?q=url:$LINK
 // Loader for Reddit API. Note that http.Client must provide a ~unique
 // UserAgent as that's what reddit segments requests by.
 type Loader struct {
-	client http.Client
+	Client http.Client
 }
 
-func (loader *Loader) Discover(ctx context.Context, link string) ([]loader.Result, error) {
+func (loader *Loader) Discover(ctx context.Context, link string) ([]redditListing, error) {
 	params := url.Values{}
 	params.Set("q", "url:"+link)
 
@@ -24,7 +23,7 @@ func (loader *Loader) Discover(ctx context.Context, link string) ([]loader.Resul
 	if err != nil {
 		return nil, err
 	}
-	resp, err := loader.client.Do(req)
+	resp, err := loader.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
