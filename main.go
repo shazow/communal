@@ -122,7 +122,7 @@ func discover(ctx context.Context, options Options) error {
 	link := options.Discover.Args.URL
 	logger.Debug().Str("link", link).Msg("discovering")
 
-	hn := hackernews.HackerNews{}
+	hn := hackernews.Loader{}
 	res, err := hn.Discover(ctx, link)
 	if err != nil {
 		return err

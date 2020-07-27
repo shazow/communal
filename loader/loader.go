@@ -3,7 +3,11 @@ package loader
 type Loader interface {
 }
 
-type Result struct {
+type Result interface {
+	Title() string
+	Submitter() string
+	Score() int
+	Permalink() string
 }
 
 type Results []Result

@@ -19,11 +19,11 @@ func normalizeLink(link string) string {
 	return link
 }
 
-type HackerNews struct {
+type Loader struct {
 	client http.Client
 }
 
-func (hn *HackerNews) Discover(ctx context.Context, link string) (*hnQueryResult, error) {
+func (loader *Loader) Discover(ctx context.Context, link string) (*hnQueryResult, error) {
 	params := url.Values{}
 	params.Set("query", normalizeLink(link))
 	params.Set("restrictSearchableAttributes", "url")
@@ -32,7 +32,7 @@ func (hn *HackerNews) Discover(ctx context.Context, link string) (*hnQueryResult
 	if err != nil {
 		return nil, err
 	}
-	resp, err := hn.client.Do(req)
+	resp, err := loader.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
