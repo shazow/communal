@@ -23,6 +23,10 @@ type Loader struct {
 	Client http.Client
 }
 
+func (loader *Loader) Name() string {
+	return "Hacker News"
+}
+
 func (loader *Loader) Discover(ctx context.Context, link string) (*hnQueryResult, error) {
 	params := url.Values{}
 	params.Set("query", normalizeLink(link))
@@ -46,12 +50,17 @@ func (loader *Loader) Discover(ctx context.Context, link string) (*hnQueryResult
 }
 
 type hnHit struct {
+	ID        string    `json:"objectID"`
 	CreatedAt time.Time `json:"created_at"`
 	Title     string    `json:"title"`
 	URL       string    `json:"url"`
 	Author    string    `json:"author"`
 	Points    int       `json:"points"`
 	StoryText string    `json:"story_text"`
+}
+
+func (hit hnHit) Permalink() string {
+	return "https://news.ycombinator.com/item?id=" + hit.ID
 }
 
 type hnQueryResult struct {

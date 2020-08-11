@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 const apiSearch = "https://www.reddit.com/search.json" // ?q=url:$LINK
@@ -13,6 +14,10 @@ const apiSearch = "https://www.reddit.com/search.json" // ?q=url:$LINK
 // UserAgent as that's what reddit segments requests by.
 type Loader struct {
 	Client http.Client
+}
+
+func (loader *Loader) Name() string {
+	return "Reddit"
 }
 
 func (loader *Loader) Discover(ctx context.Context, link string) ([]redditListing, error) {
@@ -52,7 +57,6 @@ type redditListing struct {
 		UpvoteRatio          float64 `json:"upvote_ratio"`
 		SubredditType        string  `json:"subreddit_type"`
 		TotalAwardsReceived  int     `json:"total_awards_received"`
-		Created              float64 `json:"created"`
 		Archived             bool    `json:"archived"`
 		Over18               bool    `json:"over_18"`
 		SubredditID          string  `json:"subreddit_id"`
@@ -63,8 +67,12 @@ type redditListing struct {
 		Permalink            string  `json:"permalink"`
 		URL                  string  `json:"url"`
 		SubredditSubscribers int     `json:"subreddit_subscribers"`
-		CreatedUtc           float64 `json:"created_utc"`
+		CreatedUTC           float64 `json:"created_utc"`
 	} `json:"data"`
+}
+
+func (res redditListing) TimeCreated() time.Time {
+	return time.Unix(int64(res.Data.CreatedUTC), 0)
 }
 
 func (res redditListing) Title() string {
@@ -84,5 +92,5 @@ func (res redditListing) NumComments() int {
 }
 
 func (res redditListing) Permalink() string {
-	return res.Data.Permalink
+	return "https://reddit.com" + res.Data.Permalink
 }

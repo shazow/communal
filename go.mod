@@ -16,6 +16,7 @@ require (
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/mmcdole/gofeed v1.0.0 // indirect
+	github.com/muesli/termenv v0.7.0
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pressly/chi v4.1.2+incompatible
 	github.com/rs/zerolog v1.19.0

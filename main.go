@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/OpenPeeDeeP/xdg"
 	flags "github.com/jessevdk/go-flags"
+	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -119,6 +121,8 @@ func subcommand(cmd string, options Options) error {
 	return fmt.Errorf("unknown command: %s", cmd)
 }
 
+var dateLayout = "2006-01-02"
+
 func discover(ctx context.Context, options Options) error {
 	link := options.Discover.Args.URL
 	logger.Debug().Str("link", link).Msg("discovering")
@@ -130,22 +134,49 @@ func discover(ctx context.Context, options Options) error {
 		},
 	}
 
+	// TODO: Sort by date?
+	// TODO: Colorize using termenv
+
+	fmt.Println("Query: ", link)
+
+	p := termenv.ColorProfile()
+	formatTitle := func(s string) string {
+		return termenv.String(s).Foreground(p.Color("#bf6e01")).String()
+	}
+
+	// TODO: Parallelize
 	{
-		hn := hackernews.Loader{client}
-		res, err := hn.Discover(ctx, link)
+		loader := hackernews.Loader{client}
+		res, err := loader.Discover(ctx, link)
 		if err != nil {
 			return err
 		}
-		logger.Info().Interface("result", res).Msg("hn")
+		logger.Debug().Interface("result", res).Msg("hn")
+
+		out := &strings.Builder{}
+		fmt.Fprintf(out, "\n➡️ %s\n", loader.Name())
+		for i, item := range res.Hits {
+			fmt.Fprintf(out, "  %d. [%s]  %s (by %s with %d points)\n", i+1, item.CreatedAt.Format(dateLayout), formatTitle(item.Title), item.Author, item.Points)
+			fmt.Fprintf(out, "     %s\n", item.Permalink())
+		}
+		fmt.Println(out.String())
 	}
 
 	{
-		r := reddit.Loader{client}
-		res, err := r.Discover(ctx, link)
+		loader := reddit.Loader{client}
+		res, err := loader.Discover(ctx, link)
 		if err != nil {
 			return err
 		}
-		logger.Info().Interface("result", res).Msg("reddit")
+		logger.Debug().Interface("result", res).Msg("reddit")
+
+		out := &strings.Builder{}
+		fmt.Fprintf(out, "\n➡️ %s\n", loader.Name())
+		for i, item := range res {
+			fmt.Fprintf(out, "  %d. [%s]  %s (by %s with %d points)\n", i+1, item.TimeCreated().Format(dateLayout), formatTitle(item.Title()), item.Submitter(), item.Score())
+			fmt.Fprintf(out, "     %s\n", item.Permalink())
+		}
+		fmt.Println(out.String())
 	}
 	return nil
 }
@@ -194,7 +225,7 @@ func findDataDir(overridePath string) (string, error) {
 }
 
 // httpTransport is an http.RoundTripper transport wrapper that adds default
-// communal headers and configurations.
+// headers and configurations.
 type httpTransport struct {
 	http.RoundTripper
 	UserAgent string
