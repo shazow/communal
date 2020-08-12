@@ -144,9 +144,20 @@ func discover(ctx context.Context, options Options) error {
 		return termenv.String(s).Foreground(p.Color("#bf6e01")).String()
 	}
 
+	formatMeta := func(s string) string {
+		return termenv.String(s).Foreground(p.Color("#a9dea1")).String()
+	}
+
+	formatLink := func(s string) string {
+		return termenv.String(s).Underline().String()
+	}
+
 	// TODO: Parallelize
 	{
-		loader := hackernews.Loader{client}
+		loader := hackernews.Loader{
+			Client: client,
+			Logger: logger.With().Str("loader", "hn").Logger(),
+		}
 		res, err := loader.Discover(ctx, link)
 		if err != nil {
 			return err
@@ -155,9 +166,9 @@ func discover(ctx context.Context, options Options) error {
 
 		out := &strings.Builder{}
 		fmt.Fprintf(out, "\n➡️ %s\n", loader.Name())
-		for i, item := range res.Hits {
-			fmt.Fprintf(out, "  %d. [%s]  %s (by %s with %d points)\n", i+1, item.CreatedAt.Format(dateLayout), formatTitle(item.Title), item.Author, item.Points)
-			fmt.Fprintf(out, "     %s\n", item.Permalink())
+		for i, item := range res {
+			fmt.Fprintf(out, "  %d. %s ", i+1, formatLink(item.Link()))
+			fmt.Fprintf(out, formatMeta("by %s on %s")+"\n", item.Submitter(), item.TimeCreated().Format(dateLayout))
 		}
 		fmt.Println(out.String())
 	}
