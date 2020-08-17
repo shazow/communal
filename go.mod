@@ -17,6 +17,7 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/mmcdole/gofeed v1.0.0 // indirect
 	github.com/muesli/termenv v0.7.0
+	github.com/mvdan/xurls v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pressly/chi v4.1.2+incompatible
 	github.com/rs/zerolog v1.19.0
@@ -25,4 +26,5 @@ require (
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
+	mvdan.cc/xurls/v2 v2.2.0
 )
