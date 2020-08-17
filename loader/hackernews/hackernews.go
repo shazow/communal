@@ -49,16 +49,15 @@ func (loader *Loader) Discover(ctx context.Context, link string) ([]hnLink, erro
 }
 
 func (loader *Loader) linksFromComments(ctx context.Context, res *hnQueryResult) ([]hnLink, error) {
-	commentChan := make(chan hnComment, 5)
-	g, ctx := errgroup.WithContext(ctx)
+	commentChan := make(chan hnComment)
+	g, gCtx := errgroup.WithContext(ctx)
 	for _, hit := range res.Hits {
-		hit := hit // Copy value because we're passing it down the closure
+		story := hit // Copy value because we're passing it down the closure
 		g.Go(func() error {
-			stack, err := hit.Comments(ctx, loader)
+			stack, err := story.Comments(ctx, loader)
 			if err != nil {
 				return err
 			}
-			loader.Logger.Debug().Int("comment stack", len(stack)).Msg("processing")
 			// Traverse comment graph
 			// FIXME: Could probably do this with fewer allocations
 			for len(stack) != 0 {
@@ -71,21 +70,20 @@ func (loader *Loader) linksFromComments(ctx context.Context, res *hnQueryResult)
 		})
 	}
 
-	gProcess, ctx := errgroup.WithContext(ctx)
+	gProcess, gCtx := errgroup.WithContext(gCtx)
 	gProcess.Go(func() error {
 		defer close(commentChan)
 		return g.Wait()
 	})
 
 	links := []hnLink{}
-	counter := 0
+	count := 0
 	for comment := range commentChan {
-		counter += 1
+		count += 1
 		newLinks, err := getLinks(strings.NewReader(comment.Text))
 		if err != nil {
 			return nil, err
 		}
-		loader.Logger.Debug().Int("links", len(newLinks)).Msg("found links")
 		for _, link := range newLinks {
 			links = append(links, hnLink{
 				link:    link,
@@ -94,7 +92,7 @@ func (loader *Loader) linksFromComments(ctx context.Context, res *hnQueryResult)
 		}
 	}
 
-	loader.Logger.Debug().Int("comments", counter).Msg("processed comments")
+	loader.Logger.Debug().Int("comments", count).Msg("processed comments")
 	return links, gProcess.Wait()
 }
 
@@ -139,7 +137,7 @@ type hnQueryResult struct {
 	Hits []hnHit `json:"hits"`
 }
 
-func (res *hnHit) Comments(ctx context.Context, loader *Loader) ([]hnComment, error) {
+func (res hnHit) Comments(ctx context.Context, loader *Loader) ([]hnComment, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", apiNewsItem+res.ID, nil)
 	if err != nil {
 		return nil, err

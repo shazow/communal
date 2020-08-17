@@ -1,27 +1,16 @@
 package hackernews
 
 import (
+	"communal/internal/httphelper"
 	"context"
-	"io/ioutil"
 	"net/http"
-	"strings"
 	"testing"
 )
-
-type FixedRoundTrip string
-
-func (rt FixedRoundTrip) RoundTrip(_ *http.Request) (*http.Response, error) {
-	return &http.Response{
-		StatusCode: 200,
-		Body:       ioutil.NopCloser(strings.NewReader(string(rt))),
-		Header:     make(http.Header),
-	}, nil
-}
 
 func TestLinksFromComments(t *testing.T) {
 	loader := Loader{
 		Client: http.Client{
-			Transport: FixedRoundTrip(sampleNewsOutput),
+			Transport: httphelper.FixedRoundTrip(sampleNewsOutput),
 		},
 	}
 
@@ -31,7 +20,7 @@ func TestLinksFromComments(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loader.Client.Transport = FixedRoundTrip(sampleCommentsOutput)
+	loader.Client.Transport = httphelper.FixedRoundTrip(sampleCommentsOutput)
 
 	links, err := loader.linksFromComments(ctx, res)
 	if err != nil {
@@ -41,7 +30,6 @@ func TestLinksFromComments(t *testing.T) {
 	if got, want := len(links), 80; got != want {
 		t.Errorf("got: %d; want: %d", got, want)
 	}
-
 }
 
 const sampleNewsOutput = `
