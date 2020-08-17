@@ -1,6 +1,7 @@
 package hackernews
 
 import (
+	iface "communal/loader"
 	"context"
 	"encoding/json"
 	"io"
@@ -38,7 +39,7 @@ func (loader *Loader) Name() string {
 }
 
 // Discover returns more tangential links by crawling submissions and comments.
-func (loader *Loader) Discover(ctx context.Context, link string) ([]hnLink, error) {
+func (loader *Loader) Discover(ctx context.Context, link string) ([]iface.Result, error) {
 	res, err := loader.Search(ctx, link)
 	if err != nil {
 		return nil, err
@@ -48,7 +49,7 @@ func (loader *Loader) Discover(ctx context.Context, link string) ([]hnLink, erro
 	return loader.linksFromComments(ctx, res)
 }
 
-func (loader *Loader) linksFromComments(ctx context.Context, res *hnQueryResult) ([]hnLink, error) {
+func (loader *Loader) linksFromComments(ctx context.Context, res *hnQueryResult) ([]iface.Result, error) {
 	commentChan := make(chan hnComment)
 	g, gCtx := errgroup.WithContext(ctx)
 	for _, hit := range res.Hits {
@@ -76,7 +77,7 @@ func (loader *Loader) linksFromComments(ctx context.Context, res *hnQueryResult)
 		return g.Wait()
 	})
 
-	links := []hnLink{}
+	var links []iface.Result
 	count := 0
 	for comment := range commentChan {
 		count += 1

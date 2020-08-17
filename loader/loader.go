@@ -1,13 +1,20 @@
 package loader
 
+import (
+	"context"
+	"time"
+)
+
 type Loader interface {
+	Discover(ctx context.Context, link string) ([]Result, error)
 }
 
 type Result interface {
-	Title() string
+	Link() string
 	Submitter() string
 	Score() int
 	Permalink() string
+	TimeCreated() time.Time
 }
 
 type Results []Result

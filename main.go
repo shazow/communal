@@ -158,7 +158,7 @@ func discover(ctx context.Context, options Options) error {
 		if err != nil {
 			return err
 		}
-		logger.Debug().Interface("result", res).Msg("hn")
+		logger.Debug().Int("results", len(res)).Msg("hn")
 
 		out := &strings.Builder{}
 		fmt.Fprintf(out, "\n➡️ %s\n", loader.Name())
@@ -178,7 +178,7 @@ func discover(ctx context.Context, options Options) error {
 		if err != nil {
 			return err
 		}
-		logger.Debug().Interface("result", res).Msg("reddit")
+		logger.Debug().Int("results", len(res)).Msg("reddit")
 
 		out := &strings.Builder{}
 		fmt.Fprintf(out, "\n➡️ %s\n", loader.Name())
