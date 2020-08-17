@@ -26,8 +26,8 @@ type Loader struct {
 	Logger zerolog.Logger
 }
 
-func (loader *Loader) Name() string {
-	return "Reddit"
+func (loader *Loader) ID() string {
+	return "reddit"
 }
 
 // Discover returns more tangential links by crawling submissions and comments.

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"communal/loader"
 	"communal/loader/hackernews"
 	"communal/loader/reddit"
 	"context"
@@ -134,10 +135,20 @@ func discover(ctx context.Context, options Options) error {
 		},
 	}
 
-	// TODO: Sort by date?
-	// TODO: Colorize using termenv
+	fmt.Println("Discovering query: ", link)
 
-	fmt.Println("Query: ", link)
+	loaders := map[string]loader.Loader{
+		"hackernews": &hackernews.Loader{
+			Client: client,
+			Logger: logger.With().Str("loader", "hackernews").Logger(),
+		},
+		"reddit": &reddit.Loader{
+			Client: client,
+			Logger: logger.With().Str("loader", "reddit").Logger(),
+		},
+	}
+
+	// TODO: Sort by date?
 
 	p := termenv.ColorProfile()
 	formatMeta := func(s string) string {
@@ -148,20 +159,15 @@ func discover(ctx context.Context, options Options) error {
 		return termenv.String(s).Underline().String()
 	}
 
-	// TODO: Parallelize
-	{
-		loader := hackernews.Loader{
-			Client: client,
-			Logger: logger.With().Str("loader", "hn").Logger(),
-		}
+	for id, loader := range loaders {
 		res, err := loader.Discover(ctx, link)
 		if err != nil {
 			return err
 		}
-		logger.Debug().Int("results", len(res)).Msg("hn")
+		logger.Debug().Int("results", len(res)).Msg(id)
 
 		out := &strings.Builder{}
-		fmt.Fprintf(out, "\n➡️ %s\n", loader.Name())
+		fmt.Fprintf(out, "\n➡️ %s\n", loader.ID())
 		for i, item := range res {
 			fmt.Fprintf(out, "  %d. %s ", i+1, formatLink(item.Link()))
 			fmt.Fprintf(out, formatMeta("by %s on %s")+"\n", item.Submitter(), item.TimeCreated().Format(dateLayout))
@@ -169,25 +175,6 @@ func discover(ctx context.Context, options Options) error {
 		fmt.Println(out.String())
 	}
 
-	{
-		loader := reddit.Loader{
-			Client: client,
-			Logger: logger.With().Str("loader", "reddit").Logger(),
-		}
-		res, err := loader.Discover(ctx, link)
-		if err != nil {
-			return err
-		}
-		logger.Debug().Int("results", len(res)).Msg("reddit")
-
-		out := &strings.Builder{}
-		fmt.Fprintf(out, "\n➡️ %s\n", loader.Name())
-		for i, item := range res {
-			fmt.Fprintf(out, "  %d. %s ", i+1, formatLink(item.Link()))
-			fmt.Fprintf(out, formatMeta("by %s on %s")+"\n", item.Submitter(), item.TimeCreated().Format(dateLayout))
-		}
-		fmt.Println(out.String())
-	}
 	return nil
 }
 

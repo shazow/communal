@@ -6,6 +6,7 @@ import (
 )
 
 type Loader interface {
+	ID() string
 	Discover(ctx context.Context, link string) ([]Result, error)
 }
 

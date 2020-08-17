@@ -34,8 +34,8 @@ type Loader struct {
 	Logger zerolog.Logger
 }
 
-func (loader *Loader) Name() string {
-	return "Hacker News"
+func (loader *Loader) ID() string {
+	return "hackernews"
 }
 
 // Discover returns more tangential links by crawling submissions and comments.
