@@ -140,10 +140,6 @@ func discover(ctx context.Context, options Options) error {
 	fmt.Println("Query: ", link)
 
 	p := termenv.ColorProfile()
-	formatTitle := func(s string) string {
-		return termenv.String(s).Foreground(p.Color("#bf6e01")).String()
-	}
-
 	formatMeta := func(s string) string {
 		return termenv.String(s).Foreground(p.Color("#a9dea1")).String()
 	}
@@ -174,7 +170,10 @@ func discover(ctx context.Context, options Options) error {
 	}
 
 	{
-		loader := reddit.Loader{client}
+		loader := reddit.Loader{
+			Client: client,
+			Logger: logger.With().Str("loader", "reddit").Logger(),
+		}
 		res, err := loader.Discover(ctx, link)
 		if err != nil {
 			return err
@@ -184,8 +183,8 @@ func discover(ctx context.Context, options Options) error {
 		out := &strings.Builder{}
 		fmt.Fprintf(out, "\n➡️ %s\n", loader.Name())
 		for i, item := range res {
-			fmt.Fprintf(out, "  %d. [%s]  %s (by %s with %d points)\n", i+1, item.TimeCreated().Format(dateLayout), formatTitle(item.Title()), item.Submitter(), item.Score())
-			fmt.Fprintf(out, "     %s\n", item.Permalink())
+			fmt.Fprintf(out, "  %d. %s ", i+1, formatLink(item.Link()))
+			fmt.Fprintf(out, formatMeta("by %s on %s")+"\n", item.Submitter(), item.TimeCreated().Format(dateLayout))
 		}
 		fmt.Println(out.String())
 	}

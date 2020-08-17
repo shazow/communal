@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -171,13 +172,13 @@ func (res redditListing) Permalink() string {
 }
 
 func (res redditListing) Replies() ([]redditListing, error) {
-	if len(res.Data.RawReplies) == 0 {
+	if len(res.Data.RawReplies) == 0 || res.Data.RawReplies[0] != '{' {
 		return nil, nil
 	}
 
 	var r redditQueryResult
 	if err := json.Unmarshal(res.Data.RawReplies, &r); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse reddit replies: %s - %v", res.Data.RawReplies, err)
 	}
 	return r.Data.Children, nil
 }
