@@ -1,7 +1,6 @@
 package hackernews
 
 import (
-	iface "communal/loader"
 	"context"
 	"encoding/json"
 	"io"
@@ -10,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	iface "github.com/shazow/communal/loader"
 
 	"github.com/rs/zerolog"
 	"golang.org/x/net/html"

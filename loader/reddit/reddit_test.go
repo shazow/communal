@@ -1,11 +1,12 @@
 package reddit
 
 import (
-	"communal/internal/httphelper"
 	"context"
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/shazow/communal/internal/httphelper"
 
 	"github.com/rs/zerolog"
 )

@@ -1,7 +1,6 @@
 package reddit
 
 import (
-	iface "communal/loader"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	iface "github.com/shazow/communal/loader"
 
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"

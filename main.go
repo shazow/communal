@@ -1,10 +1,6 @@
 package main
 
 import (
-	"communal/internal/httphelper"
-	"communal/loader"
-	"communal/loader/hackernews"
-	"communal/loader/reddit"
 	"context"
 	"errors"
 	"fmt"
@@ -13,6 +9,11 @@ import (
 	"os/signal"
 	"sort"
 	"time"
+
+	"github.com/shazow/communal/internal/httphelper"
+	"github.com/shazow/communal/loader"
+	"github.com/shazow/communal/loader/hackernews"
+	"github.com/shazow/communal/loader/reddit"
 
 	flags "github.com/jessevdk/go-flags"
 	"github.com/muesli/termenv"

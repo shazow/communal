@@ -1,10 +1,11 @@
 package hackernews
 
 import (
-	"communal/internal/httphelper"
 	"context"
 	"net/http"
 	"testing"
+
+	"github.com/shazow/communal/internal/httphelper"
 )
 
 func TestLinksFromComments(t *testing.T) {
