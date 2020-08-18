@@ -1,10 +1,12 @@
 package main
 
 import (
+	"communal/internal/httphelper"
 	"communal/loader"
 	"communal/loader/hackernews"
 	"communal/loader/reddit"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -112,7 +114,8 @@ func subcommand(cmd string, options Options) error {
 	case "discover":
 		return discover(ctx, options)
 	case "serve":
-		return serve(ctx, options)
+		return errors.New("serve is disabled for now, come back later.")
+		//	return serve(ctx, options)
 	}
 
 	return fmt.Errorf("unknown command: %s", cmd)
@@ -125,7 +128,7 @@ func discover(ctx context.Context, options Options) error {
 	logger.Debug().Str("link", link).Msg("discovering")
 
 	client := http.Client{
-		Transport: &httpTransport{
+		Transport: httphelper.TransportWithAgent{
 			RoundTripper: http.DefaultTransport,
 			UserAgent:    fmt.Sprintf("communal/%s", Version), // TODO: Unhardcode
 		},

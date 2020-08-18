@@ -1,17 +1,6 @@
 package main
 
-import (
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-	"time"
-
-	"github.com/OpenPeeDeeP/xdg"
-	"github.com/fvbock/endless"
-	"github.com/pressly/chi"
-	"github.com/pressly/chi/middleware"
-)
+/*
 
 // findDataDir returns a valid data dir, will create it if it doesn't
 // exist.
@@ -22,20 +11,6 @@ func findDataDir(overridePath string) (string, error) {
 	}
 	err := os.MkdirAll(path, 0700)
 	return path, err
-}
-
-// httpTransport is an http.RoundTripper transport wrapper that adds default
-// headers and configurations.
-type httpTransport struct {
-	http.RoundTripper
-	UserAgent string
-}
-
-func (transport *httpTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if transport.UserAgent != "" {
-		req.Header.Add("User-Agent", transport.UserAgent)
-	}
-	return transport.RoundTripper.RoundTrip(req)
 }
 
 func serve(ctx context.Context, options Options) error {
@@ -69,3 +44,4 @@ func serve(ctx context.Context, options Options) error {
 	fmt.Fprintf(os.Stderr, "listening on %s\n", bind)
 	return endless.ListenAndServe(bind, r)
 }
+*/
