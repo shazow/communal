@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
+	"sort"
 	"time"
 
 	"github.com/OpenPeeDeeP/xdg"
@@ -163,36 +163,39 @@ func discover(ctx context.Context, options Options) error {
 	resChan := make(chan loader.Result)
 	g, gCtx := errgroup.WithContext(ctx)
 
-	for id, loader := range loaders {
+	for _, loader := range loaders {
 		g.Go(func() error {
-			res, err := loader.Discover(ctx, link)
+			r, err := loader.Discover(ctx, link)
 			if err != nil {
 				return err
 			}
-			for _, res := range {
+			for _, res := range r {
 				resChan <- res
 			}
 			return nil
 		})
 	}
 
-	gProgress, gCtx := errgroup.WithContext(gctx)
+	gProgress, gCtx := errgroup.WithContext(gCtx)
 	gProgress.Go(func() error {
 		defer close(resChan)
 		return g.Wait()
 	})
 
 	// Accumulate results
-	summary := map[string]struct{
-		Results []loader.Result
-	}{}
+	ordered := []linkResult{}
+	lookup := map[string]*linkResult{}
 
 	for res := range resChan {
-		if entry, ok := summary[res.Link()]; ok {
-			entry.Results = append(entry.Results, res)
+		if entry, ok := lookup[res.Link()]; ok {
+			entry.Add(res)
 		} else {
-			entry.Results = []loader.Result{res}
-			summary[res.Link()] = entry
+			entry := linkResult{
+				link: res.Link(),
+			}
+			entry.Add(res)
+			lookup[res.Link()] = &entry
+			ordered = append(ordered, entry)
 		}
 	}
 
@@ -200,13 +203,13 @@ func discover(ctx context.Context, options Options) error {
 		return err
 	}
 
-		out := &strings.Builder{}
-		fmt.Fprintf(out, "\n➡️ %s\n", loader.ID())
-		for i, item := range res {
-			fmt.Fprintf(out, "  %d. %s ", i+1, formatLink(item.Link()))
-			fmt.Fprintf(out, formatMeta("by %s on %s")+"\n", item.Submitter(), item.TimeCreated().Format(dateLayout))
-		}
-		fmt.Println(out.String())
+	sort.Slice(ordered, func(i, j int) bool {
+		return ordered[i].Score() > ordered[j].Score()
+	})
+
+	for i, item := range ordered {
+		fmt.Printf("  %d. %s ", i+1, formatLink(item.Link()))
+		fmt.Printf(formatMeta("by %s on %s")+"\n", item.Submitter(), item.TimeCreated().Format(dateLayout))
 	}
 
 	return nil
@@ -267,4 +270,36 @@ func (transport *httpTransport) RoundTrip(req *http.Request) (*http.Response, er
 		req.Header.Add("User-Agent", transport.UserAgent)
 	}
 	return transport.RoundTripper.RoundTrip(req)
+}
+
+type linkResult struct {
+	link        string
+	timeCreated time.Time
+	results     []loader.Result
+}
+
+func (res *linkResult) Add(r loader.Result) {
+	res.results = append(res.results, r)
+
+	if res.timeCreated.IsZero() {
+		res.timeCreated = r.TimeCreated()
+	} else if res.timeCreated.After(r.TimeCreated()) {
+		res.timeCreated = r.TimeCreated()
+	}
+}
+
+func (res *linkResult) Submitter() string {
+	return fmt.Sprintf("%d people", len(res.results))
+}
+
+func (res *linkResult) Score() int {
+	return len(res.results)
+}
+
+func (res *linkResult) Link() string {
+	return res.link
+}
+
+func (res *linkResult) TimeCreated() time.Time {
+	return res.timeCreated
 }
