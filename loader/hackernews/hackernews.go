@@ -45,7 +45,7 @@ func (loader *Loader) Discover(ctx context.Context, link string) ([]iface.Result
 		return nil, err
 	}
 
-	loader.Logger.Debug().Int("hits", len(res.Hits)).Msg("search results")
+	loader.Logger.Debug().Int("hits", len(res.Hits)).Msg("discover results")
 	return loader.linksFromComments(ctx, res)
 }
 

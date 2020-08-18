@@ -17,6 +17,7 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/fvbock/endless"
 	"github.com/pressly/chi"
@@ -159,12 +160,45 @@ func discover(ctx context.Context, options Options) error {
 		return termenv.String(s).Underline().String()
 	}
 
+	resChan := make(chan loader.Result)
+	g, gCtx := errgroup.WithContext(ctx)
+
 	for id, loader := range loaders {
-		res, err := loader.Discover(ctx, link)
-		if err != nil {
-			return err
+		g.Go(func() error {
+			res, err := loader.Discover(ctx, link)
+			if err != nil {
+				return err
+			}
+			for _, res := range {
+				resChan <- res
+			}
+			return nil
+		})
+	}
+
+	gProgress, gCtx := errgroup.WithContext(gctx)
+	gProgress.Go(func() error {
+		defer close(resChan)
+		return g.Wait()
+	})
+
+	// Accumulate results
+	summary := map[string]struct{
+		Results []loader.Result
+	}{}
+
+	for res := range resChan {
+		if entry, ok := summary[res.Link()]; ok {
+			entry.Results = append(entry.Results, res)
+		} else {
+			entry.Results = []loader.Result{res}
+			summary[res.Link()] = entry
 		}
-		logger.Debug().Int("results", len(res)).Msg(id)
+	}
+
+	if err := gProgress.Wait(); err != nil {
+		return err
+	}
 
 		out := &strings.Builder{}
 		fmt.Fprintf(out, "\n➡️ %s\n", loader.ID())
