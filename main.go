@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/shazow/communal/internal/httphelper"
@@ -135,8 +136,6 @@ func discover(ctx context.Context, options Options) error {
 		},
 	}
 
-	fmt.Println("Discovering query: ", link)
-
 	loaders := map[string]loader.Loader{
 		"hackernews": &hackernews.Loader{
 			Client: client,
@@ -159,10 +158,25 @@ func discover(ctx context.Context, options Options) error {
 		return termenv.String(s).Underline().String()
 	}
 
+	formatCount := func(i int) string {
+		s := "✖" + strconv.Itoa(i)
+		switch i {
+		case 1:
+			return s
+		case 2:
+			return termenv.String(s).Foreground(p.Color("#bd9955")).String()
+		case 3:
+			return termenv.String(s).Foreground(p.Color("#bc7f37")).String()
+		default:
+			return termenv.String(s).Foreground(p.Color("#bc5b23")).String()
+		}
+	}
+
 	resChan := make(chan loader.Result)
 	g, gCtx := errgroup.WithContext(ctx)
 
 	for _, loader := range loaders {
+		loader := loader // Copy for closure
 		g.Go(func() error {
 			r, err := loader.Discover(ctx, link)
 			if err != nil {
@@ -182,18 +196,22 @@ func discover(ctx context.Context, options Options) error {
 	})
 
 	// Accumulate results
-	ordered := []linkResult{}
+	ordered := []*linkResult{}
 	lookup := map[string]*linkResult{}
+	count := 0
 
 	for res := range resChan {
+		count += 1
+
 		if entry, ok := lookup[res.Link()]; ok {
 			entry.Add(res)
+			logger.Debug().Int("count", entry.Count()).Str("link", entry.Link()).Msg("adding dupe")
 		} else {
-			entry := linkResult{
+			entry := &linkResult{
 				link: res.Link(),
 			}
 			entry.Add(res)
-			lookup[res.Link()] = &entry
+			lookup[res.Link()] = entry
 			ordered = append(ordered, entry)
 		}
 	}
@@ -203,12 +221,20 @@ func discover(ctx context.Context, options Options) error {
 	}
 
 	sort.Slice(ordered, func(i, j int) bool {
-		return ordered[i].Score() > ordered[j].Score()
+		if a, b := ordered[i].Score(), ordered[j].Score(); a != b {
+			return a > b
+		} else if a, b := ordered[i].TimeCreated(), ordered[j].TimeCreated(); a != b {
+			return a.Before(b)
+		}
+		return false
 	})
 
-	for i, item := range ordered {
-		fmt.Printf("  %d. %s ", i+1, formatLink(item.Link()))
-		fmt.Printf(formatMeta("by %s on %s")+"\n", item.Submitter(), item.TimeCreated().Format(dateLayout))
+	logger.Debug().Int("total", count).Int("deduped", len(ordered)).Msg("result summary")
+
+	for _, item := range ordered {
+		fmt.Printf("%s ", formatLink(item.Link()))
+		fmt.Printf(formatCount(item.Count()))
+		fmt.Printf(formatMeta(" on %s")+"\n", item.TimeCreated().Format(dateLayout))
 	}
 
 	return nil
@@ -218,6 +244,10 @@ type linkResult struct {
 	link        string
 	timeCreated time.Time
 	results     []loader.Result
+}
+
+func (res *linkResult) Count() int {
+	return len(res.results)
 }
 
 func (res *linkResult) Add(r loader.Result) {
