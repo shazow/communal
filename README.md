@@ -13,7 +13,7 @@
 
 ### Version 1:
 
-- `communal discover "$LINK"` will crawl news aggregators and various sources and accumulate interesting details about the link, its contents, commentary, and tangentially-related links.
+- [x] `communal discover "$LINK"` will crawl news aggregators and various sources and accumulate interesting details about the link, its contents, commentary, and tangentially-related links.
 
 ### Someday:
 
