@@ -164,11 +164,11 @@ func discover(ctx context.Context, options Options) error {
 		case 1:
 			return s
 		case 2:
-			return termenv.String(s).Foreground(p.Color("#bd9955")).String()
+			return termenv.String(s).Foreground(p.Color("#bc9923")).String()
 		case 3:
-			return termenv.String(s).Foreground(p.Color("#bc7f37")).String()
+			return termenv.String(s).Foreground(p.Color("#bc7123")).String()
 		default:
-			return termenv.String(s).Foreground(p.Color("#bc5b23")).String()
+			return termenv.String(s).Foreground(p.Color("#bc4523")).String()
 		}
 	}
 
@@ -205,7 +205,6 @@ func discover(ctx context.Context, options Options) error {
 
 		if entry, ok := lookup[res.Link()]; ok {
 			entry.Add(res)
-			logger.Debug().Int("count", entry.Count()).Str("link", entry.Link()).Msg("adding dupe")
 		} else {
 			entry := &linkResult{
 				link: res.Link(),
