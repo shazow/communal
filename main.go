@@ -46,11 +46,6 @@ type Options struct {
 	} `command:"discover" description:"Crawl metadata about a link."`
 }
 
-func exit(code int, format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, args...)
-	os.Exit(code)
-}
-
 func main() {
 	options := Options{}
 	parser := flags.NewParser(&options, flags.Default)
@@ -109,14 +104,14 @@ func subcommand(cmd string, options Options) error {
 		panic("aborted")
 	}(abort)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	switch cmd {
 	case "discover":
 		return discover(ctx, options)
 	case "serve":
-		return errors.New("serve is disabled for now, come back later.")
+		return errors.New("serve is disabled for now, come back later")
 		//	return serve(ctx, options)
 	}
 
@@ -189,7 +184,7 @@ func discover(ctx context.Context, options Options) error {
 		})
 	}
 
-	gProgress, gCtx := errgroup.WithContext(gCtx)
+	gProgress, _ := errgroup.WithContext(gCtx)
 	gProgress.Go(func() error {
 		defer close(resChan)
 		return g.Wait()
@@ -201,7 +196,7 @@ func discover(ctx context.Context, options Options) error {
 	count := 0
 
 	for res := range resChan {
-		count += 1
+		count++
 
 		if entry, ok := lookup[res.Link()]; ok {
 			entry.Add(res)
@@ -232,7 +227,7 @@ func discover(ctx context.Context, options Options) error {
 
 	for _, item := range ordered {
 		fmt.Printf("%s ", formatLink(item.Link()))
-		fmt.Printf(formatCount(item.Count()))
+		fmt.Print(formatCount(item.Count()))
 		fmt.Printf(formatMeta(" on %s")+"\n", item.TimeCreated().Format(dateLayout))
 	}
 
