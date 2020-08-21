@@ -69,7 +69,7 @@ func (loader *Loader) linksFromComments(ctx context.Context, res []redditListing
 		})
 	}
 
-	gProcess, gCtx := errgroup.WithContext(gCtx)
+	gProcess, _ := errgroup.WithContext(gCtx)
 	gProcess.Go(func() error {
 		defer close(commentChan)
 		return g.Wait()
