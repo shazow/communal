@@ -154,7 +154,7 @@ func discover(ctx context.Context, options Options) error {
 	}
 
 	formatCount := func(i int) string {
-		s := "✖" + strconv.Itoa(i)
+		s := "✖ " + strconv.Itoa(i)
 		switch i {
 		case 1:
 			return s
