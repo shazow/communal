@@ -14,6 +14,8 @@
 ### Version 1:
 
 - [x] `communal discover "$LINK"` will crawl news aggregators and various sources and accumulate interesting details about the link, its contents, commentary, and tangentially-related links.
+  
+  ![Screenshot](https://user-images.githubusercontent.com/6292/91218996-f0341380-e6e7-11ea-9bb4-50bab6b0939a.png)
 
 ### Someday:
 
