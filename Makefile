@@ -21,6 +21,9 @@ run: $(BINARY)
 test:
 	go test -vet "all" -timeout 5s -race ./...
 
+lint:
+	golint ./...
+
 deploy: build
 	rsync -bavz --progress $(BINARY) ip.shazow.net:projects/news/$(BINARY)
 	ssh ip.shazow.net fuser -s -k -HUP projects/news/$(BINARY)~ || echo "binary did not change"
