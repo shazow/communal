@@ -18,6 +18,7 @@ import (
 
 const apiSearch = "https://www.reddit.com/search.json" // ?q=url:$LINK
 
+// FIXME: This gets passed in?
 const userAgent = "cli:github.com/shazow/communal:v1 (by /u/shazow)"
 
 var matchURLs = xurls.Strict()

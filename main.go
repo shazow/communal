@@ -40,6 +40,7 @@ type Options struct {
 	} `command:"serve" description:"Serve a communal frontend."`
 
 	Discover struct {
+		Loaders []string `long:"loaders" description:"Loaders to use. (Default: all)"`
 		Args struct {
 			URL string `positional-arg-name:"url" description:"Link to discover"`
 		} `positional-args:"yes"`
@@ -127,7 +128,8 @@ func discover(ctx context.Context, options Options) error {
 	client := http.Client{
 		Transport: httphelper.TransportWithAgent{
 			RoundTripper: http.DefaultTransport,
-			UserAgent:    fmt.Sprintf("communal/%s", Version), // TODO: Unhardcode
+			UserAgent:    fmt.Sprintf("cli:github.com/shazow/communal@%s (by /u/shazow)", Version), // TODO: Unhardcode
+			Logger:       logger,
 		},
 	}
 
@@ -140,6 +142,19 @@ func discover(ctx context.Context, options Options) error {
 			Client: client,
 			Logger: logger.With().Str("loader", "reddit").Logger(),
 		},
+	}
+
+	if options.Discover.Loaders != nil {
+		filteredLoaders := map[string]loader.Loader{}
+		for _, name := range options.Discover.Loaders {
+			if loader, ok := loaders[name]; ok {
+				filteredLoaders[name] = loader
+			} else {
+				logger.Warn().Str("loader", name).Msg("unknown loader requested, skipping")
+			}
+		}
+		logger.Debug().Int("available", len(loaders)).Int("filtered", len(filteredLoaders)).Msg("filtered loaders")
+		loaders = filteredLoaders
 	}
 
 	// TODO: Sort by date?
