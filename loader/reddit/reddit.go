@@ -18,6 +18,8 @@ import (
 
 const apiSearch = "https://www.reddit.com/search.json" // ?q=url:$LINK
 
+const userAgent = "cli:github.com/shazow/communal:v1 (by /u/shazow)"
+
 var matchURLs = xurls.Strict()
 
 // Loader for Reddit API. Note that http.Client must provide a ~unique
@@ -95,15 +97,24 @@ func (loader *Loader) Search(ctx context.Context, link string) ([]redditListing,
 	params := url.Values{}
 	params.Set("q", "url:"+link)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", apiSearch+"?"+params.Encode(), nil)
+	query := apiSearch + "?" + params.Encode()
+	req, err := http.NewRequestWithContext(ctx, "GET", query, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: Factor out
+	req.Header.Add("User-Agent", userAgent)
+
 	resp, err := loader.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("request %q failed with status: %d", req.URL.String(), resp.StatusCode)
+	}
 
 	var r redditQueryResult
 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
