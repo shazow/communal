@@ -102,8 +102,7 @@ func subcommand(cmd string, options Options) error {
 	case "discover":
 		return discover(ctx, options)
 	case "serve":
-		return errors.New("serve is disabled for now, come back later")
-		//	return serve(ctx, options)
+		return serve(ctx, options)
 	}
 
 	return fmt.Errorf("unknown command: %s", cmd)
