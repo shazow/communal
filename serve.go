@@ -13,6 +13,7 @@ import (
 )
 
 func serve(ctx context.Context, options Options) error {
+	// TODO: Use https://github.com/caddyserver/certmagic for TLS
 	// FIXME: This is a placeholder, will be replaced with something real later.
 	bind := ":8080"
 	if len(os.Args) > 1 {
