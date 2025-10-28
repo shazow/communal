@@ -1,19 +1,19 @@
 package main
 
-/*
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"time"
 
-// findDataDir returns a valid data dir, will create it if it doesn't
-// exist.
-func findDataDir(overridePath string) (string, error) {
-	path := overridePath
-	if path == "" {
-		path = xdg.New("communal", "communal").DataHome()
-	}
-	err := os.MkdirAll(path, 0700)
-	return path, err
-}
+	"github.com/fvbock/endless"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+)
 
 func serve(ctx context.Context, options Options) error {
+	// TODO: Use https://github.com/caddyserver/certmagic for TLS
 	// FIXME: This is a placeholder, will be replaced with something real later.
 	bind := ":8080"
 	if len(os.Args) > 1 {
@@ -44,4 +44,3 @@ func serve(ctx context.Context, options Options) error {
 	fmt.Fprintf(os.Stderr, "listening on %s\n", bind)
 	return endless.ListenAndServe(bind, r)
 }
-*/
